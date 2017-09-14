@@ -1,6 +1,6 @@
 # Visual-Analytics-Assignments
 
-Tested on the local system in Python3. 
+Tested on the local system in Python3 and on Jupyter also. 
 The rendered interactive .html files are also present in the repository.
 
 It uses dataset from Gapminder: <a href="https://docs.google.com/spreadsheets/d/1YAvGw1qkOJZIOiyOEXkQjtDlDX4EvtLOuLz73QYRoBE/pub">Unemployment Rate for Age 15-24</a>
