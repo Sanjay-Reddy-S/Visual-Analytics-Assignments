@@ -1,10 +1,10 @@
 import random
 import pandas as pd
-from bokeh.layouts import column
+#from bokeh.layouts import column
 from bokeh.plotting import figure, output_file, show
 from bokeh.models import HoverTool,ColumnDataSource
-from bokeh.models.callbacks import CustomJS
-from bokeh.layouts import widgetbox,layout
+#from bokeh.models.callbacks import CustomJS
+#from bokeh.layouts import widgetbox,layout
 from bokeh.models.widgets import Panel,Tabs,Dropdown
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
@@ -14,6 +14,7 @@ from sklearn.svm import SVR
 from scipy.stats import pearsonr
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error
+from sklearn.ensemble import GradientBoostingRegressor
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
@@ -125,6 +126,7 @@ svm_values=[]
 linr_values=[]
 logr_values=[]
 svr_values=[]
+gbr_values=[]
 for count in range(len(missing_features)):
 	feature_index= features.index(missing_features[count])
 	small_df_x=np.append(small_df.iloc[:,:feature_index],small_df.iloc[:,feature_index+1:],axis=1)
@@ -151,6 +153,11 @@ for count in range(len(missing_features)):
 	clf.fit(small_df_x,small_df_y)
 	svr_values.append(int(clf.predict(row)))
 
+	clf = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1,max_depth=1, random_state=0, loss='ls')
+	clf.fit(small_df_x, small_df_y)
+	gbr_values.append(int(clf.predict(row)))
+
+
 #print knn_values
 #print svm_values
 #print linr_values
@@ -162,15 +169,15 @@ svm_values_2=[]
 linr_values_2=[]
 logr_values_2=[]
 svr_values_2=[]
-
+gbr_values_2=[]
 for count in range(len(missing_features)):
 	feature_index= features.index(missing_features[count])
 	small_df_x=small_df.iloc[:,:2]
 	small_df_y=small_df.iloc[:,feature_index]
 	row= miss_df.iloc[missing_row_indices[count],:2]
-	print small_df_x.shape
-	print small_df_y.shape
-	print row.shape
+	#print small_df_x.shape
+	#print small_df_y.shape
+	#print row.shape
 	#break
 	clf=KNeighborsClassifier()
 	clf.fit(small_df_x,small_df_y)
@@ -191,6 +198,10 @@ for count in range(len(missing_features)):
 	clf=SVR(kernel='rbf')
 	clf.fit(small_df_x,small_df_y)
 	svr_values_2.append(int(clf.predict(row)))
+
+	clf = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1,max_depth=1, random_state=0, loss='ls')
+	clf.fit(small_df_x, small_df_y)
+	gbr_values_2.append(int(clf.predict(row)))
 
 """
 y=small_df.iloc[:,3]
@@ -237,7 +248,7 @@ x_range=[(i+1) for i in range(len(actual_values))]
 output_file("difference_lines.html")
 hover=HoverTool(tooltips=[("index","$index"),("(x,y)","($x,$y)")])
 p = figure(plot_width=1000, plot_height=800,tools=[hover,'pan','wheel_zoom','box_zoom','box_select'],title="Difference in values",x_axis_label="Different Columns "+str(missing_features),y_axis_label="Number axis")
-p.circle(x_range, actual_values,size=20,color=get_color(),legend="Actual Values")
+p.line(x_range, actual_values,line_width=2,color=get_color(),legend="Actual Values")
 
 p.circle(x_range, mean_values,size=20,color=get_color(),legend="Mean Values")
 p.circle(x_range, median_values,size=20,color=get_color(),legend="Median Values")
@@ -249,28 +260,127 @@ p.legend.click_policy="hide"
 tab1=Panel(child=p,title="Interpolated Values")
 
 p2 = figure(plot_width=1000, plot_height=800,tools=[hover,'pan','wheel_zoom','box_zoom','box_select'],title="Difference in values (considering only CHannel & Region as input)",x_axis_label="Different Columns "+str(missing_features),y_axis_label="Number axis")
-p2.circle(x_range, actual_values,size=20,color=get_color(),legend="Actual Values")
+p2.line(x_range, actual_values,line_width=2,color=get_color(),legend="Actual Values")
 
 p2.circle(x_range, knn_values_2,size=20,color=get_color(),legend="KNN Values")
 p2.circle(x_range, svm_values_2,size=20,color=get_color(),legend="SVM Values")
 p2.circle(x_range, linr_values_2,size=20,color=get_color(),legend="Linear Values")
 p2.circle(x_range, logr_values_2,size=20,color=get_color(),legend="Logistic Values")
 p2.circle(x_range, svr_values_2,size=20,color=get_color(),legend="SVR Values")
+p2.circle(x_range, gbr_values_2,size=20,color=get_color(),legend="Grad Boost Values")
 
 p2.legend.click_policy="hide"
 tab2=Panel(child=p2,title="Channel & Region as inputs")
 
 p3 = figure(plot_width=1000, plot_height=800,tools=[hover,'pan','wheel_zoom','box_zoom','box_select'],title="Difference in values ",x_axis_label="Different Columns "+str(missing_features),y_axis_label="Number axis")
-p3.circle(x_range, actual_values,size=20,color=get_color(),legend="Actual Values")
+p3.line(x_range, actual_values,line_width=2,color=get_color(),legend="Actual Values")
 
 p3.circle(x_range, knn_values,size=20,color=get_color(),legend="KNN Values")
 p3.circle(x_range, svm_values,size=20,color=get_color(),legend="SVM Values")
 p3.circle(x_range, linr_values,size=20,color=get_color(),legend="Linear Values")
 p3.circle(x_range, logr_values,size=20,color=get_color(),legend="Logistic Values")
 p3.circle(x_range, svr_values,size=20,color=get_color(),legend="SVR Values")
+p3.circle(x_range, gbr_values,size=20,color=get_color(),legend="GBR Values")
 
 p3.legend.click_policy="hide"
 tab3=Panel(child=p3,title="All except missing as inputs")
+
+p2.legend.click_policy="hide"
+tab2=Panel(child=p2,title="Channel & Region as inputs")
+
+def dropdown_graph():
+	p4 = figure(plot_width=1000, plot_height=800,tools=[hover,'pan','wheel_zoom','box_zoom','box_select'],title="Difference in values ",x_axis_label="Different Columns "+str(missing_features),y_axis_label="Number axis")
+	zeros = np.zeros(len(knn_values))
+	source1 = ColumnDataSource(data=dict(x=x_range, y = knn_values, y_full = knn_values, y_zeros = zeros))
+	source2 = ColumnDataSource(data=dict(x=x_range, y = svm_values, y_full = svm_values, y_zeros = zeros))
+	source3 = ColumnDataSource(data=dict(x=x_range, y = linr_values, y_full = linr_values, y_zeros = zeros))
+	source4 = ColumnDataSource(data=dict(x=x_range, y = logr_values, y_full = logr_values, y_zeros = zeros))
+	source5 = ColumnDataSource(data=dict(x=x_range, y = svr_values, y_full = svr_values, y_zeros = zeros))
+
+	#p.line(x ='x', y ='y', source = source1,color=color1,line_width=2,legend='Australia')
+	p4.circle(x ='x', y ='y', source = source1,size=20,color=get_color(),legend="Actual Values")
+
+	p4.circle(x ='x', y ='y', source = source1,size=20,color=get_color(),legend="KNN Values")
+	p4.circle(x ='x', y ='y', source = source2,size=20,color=get_color(),legend="SVM Values")
+	p4.circle(x ='x', y ='y', source = source3,size=20,color=get_color(),legend="Linear Values")
+	p4.circle(x ='x', y ='y', source = source4,color=get_color(),legend="Logistic Values")
+	p4.circle(x ='x', y ='y', source = source5,size=20,color=get_color(),legend="SVR Values")
+
+	p4.legend.click_policy="hide"
+
+	update_curve=CustomJS(args={'source1': source1,'source2': source2,'source3': source3,'source4': source4,'source5': source5}, code="""
+	var f = cb_obj.get('value');
+	var data1 = source1.get('data');
+    var data2 = source2.get('data');
+    var data3 = source3.get('data');
+    var data4 = source4.get('data');
+    var data5 = source5.get('data');
+    if(f=='knn_values'){
+    	data2['y']=data2['y_zeros'];
+    	data3['y']=data3['y_zeros'];
+    	data4['y']=data4['y_zeros'];
+    	data5['y']=data5['y_zeros'];
+    	data1['y']=data1['y_full'];
+    	source1.trigger('change');
+    	source2.trigger('change');
+    	source3.trigger('change');
+    	source4.trigger('change');
+    	source5.trigger('change');
+    }
+    if(f=='svm_values'){
+    	data1['y']=data1['y_zeros'];
+    	data3['y']=data3['y_zeros'];
+    	data4['y']=data4['y_zeros'];
+    	data5['y']=data5['y_zeros'];
+    	data2['y']=data2['y_full'];
+    	source1.trigger('change');
+    	source2.trigger('change');
+    	source3.trigger('change');
+    	source4.trigger('change');
+    	source5.trigger('change');
+    }
+    if(f=='linr_values'){
+    	data1['y']=data1['y_zeros'];
+    	data2['y']=data2['y_zeros'];
+    	data4['y']=data4['y_zeros'];
+    	data5['y']=data5['y_zeros'];
+    	data3['y']=data3['y_full'];
+    	source1.trigger('change');
+    	source2.trigger('change');
+    	source3.trigger('change');
+    	source4.trigger('change');
+    	source5.trigger('change');
+    }
+    if(f=='logr_values'){
+    	data1['y']=data1['y_zeros'];
+    	data2['y']=data2['y_zeros'];
+    	data3['y']=data3['y_zeros'];
+    	data5['y']=data5['y_zeros'];
+    	data4['y']=data4['y_full'];
+    	source1.trigger('change');
+    	source2.trigger('change');
+    	source3.trigger('change');
+    	source4.trigger('change');
+    	source5.trigger('change');
+    }
+    if(f=='svr_values'){
+    	data1['y']=data1['y_zeros'];
+    	data2['y']=data2['y_zeros'];
+    	data3['y']=data3['y_zeros'];
+    	data4['y']=data4['y_zeros'];
+    	data5['y']=data5['y_full'];
+    	source1.trigger('change');
+    	source2.trigger('change');
+    	source3.trigger('change');
+    	source4.trigger('change');
+    	source5.trigger('change');
+    }
+	""")
+
+	menu = [("KNN", "knn_values"), ("SVM","svm_values"),("Linear R", "linr_values"), ("Logistic R","logr_values"), ("SVR", "svr_values")]
+	dropdown = Dropdown(label="Select comodeluntry", button_type="warning", menu=menu,callback = update_curve)
+	layout = column(dropdown, p4)
+	show(layout)
 
 tabs=Tabs(tabs=[tab1,tab2,tab3])
 #tabs=Tabs(tabs=[tab1,tab3])
