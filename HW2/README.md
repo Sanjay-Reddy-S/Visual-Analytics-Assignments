@@ -25,8 +25,8 @@ There are mainly 2 types of methods to deal with missing-data:
 
 Only line and scatter plots are used because using that felt natural and easily was giving insight how well the estimates are differing from actual values. The X-axis, represents 6 missing values (1-'Milk',2-'Grocery',2-'Detergents_paper',1-'Delicassen')
 There are 2 types of graphs: In both of them, labels can be hid by clicking on the legend (allowing individual comparisons)
-    * Directly plotting the values of the columns
-    * Calculating the differences and then normalizing using the range (Max-Min) of each individual column with missing value.
+* Directly plotting the values of the columns
+* Calculating the differences and then normalizing using the range (Max-Min) of each individual column with missing value.
 
 It uses dataset from UCI: <a href="http://archive.ics.uci.edu/ml/datasets/Wholesale+customers">Wholesale customers dataset</a>
 
