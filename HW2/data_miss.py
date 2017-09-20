@@ -2,10 +2,11 @@ import random
 import pandas as pd
 #from bokeh.layouts import column
 from bokeh.plotting import figure, output_file, show
+#from bokeh.io import vform
 from bokeh.models import HoverTool,ColumnDataSource
 #from bokeh.models.callbacks import CustomJS
 #from bokeh.layouts import widgetbox,layout
-from bokeh.models.widgets import Panel,Tabs,Dropdown
+from bokeh.models.widgets import Panel,Tabs,Dropdown,DataTable, TableColumn
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
@@ -15,7 +16,6 @@ from scipy.stats import pearsonr
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error
 from sklearn.ensemble import GradientBoostingRegressor
-
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
@@ -70,6 +70,7 @@ for lst_j in missing_row_index:
 for i in range(len(missing_features)):
 	actual_values.append(actual_rows[i][missing_features[i]])
 
+range_values=[]
 mean_values=[]
 median_values=[]
 random_values=[]
@@ -77,6 +78,7 @@ interpolate_values=[]
 for i in missing_features:
 	mean_values.append(miss_df[i].mean())
 	median_values.append(miss_df[i].median())
+	range_values.append(miss_df[i].max()-miss_df[i].min())
 	while(1):
 		if(str(miss_df[i][random.randrange(0,len(records))])!='nan'):
 			random_values.append(miss_df[i][random.randrange(0,len(records))])
@@ -285,9 +287,6 @@ p3.circle(x_range, gbr_values,size=20,color=get_color(),legend="GBR Values")
 p3.legend.click_policy="hide"
 tab3=Panel(child=p3,title="All except missing as inputs")
 
-p2.legend.click_policy="hide"
-tab2=Panel(child=p2,title="Channel & Region as inputs")
-
 def dropdown_graph():
 	p4 = figure(plot_width=1000, plot_height=800,tools=[hover,'pan','wheel_zoom','box_zoom','box_select'],title="Difference in values ",x_axis_label="Different Columns "+str(missing_features),y_axis_label="Number axis")
 	zeros = np.zeros(len(knn_values))
@@ -381,6 +380,48 @@ def dropdown_graph():
 	dropdown = Dropdown(label="Select comodeluntry", button_type="warning", menu=menu,callback = update_curve)
 	layout = column(dropdown, p4)
 	show(layout)
+
+tabs=Tabs(tabs=[tab1,tab2,tab3])
+#tabs=Tabs(tabs=[tab1,tab3])
+show(tabs)
+
+
+#output_file("graph_differences.html")
+hover=HoverTool(tooltips=[("index","$index"),("(x,y)","($x,$y)")])
+p = figure(plot_width=1000, plot_height=800,tools=[hover,'pan','wheel_zoom','box_zoom','box_select'],title="Difference in values (Normalized with range)",x_axis_label="Different Columns "+str(missing_features),y_axis_label="Number axis")
+#p.line(x_range, actual_values,line_width=2,color=get_color(),legend="Actual Values")
+
+p.circle(x_range, [(abs(a_i - b_i)/c_i) for a_i, b_i,c_i in zip(mean_values, actual_values,range_values)],size=20,color=get_color(),legend="Mean Values")
+p.circle(x_range, [(abs(a_i - b_i)/c_i) for a_i, b_i,c_i in zip(median_values, actual_values,range_values)],size=20,color=get_color(),legend="Median Values")
+p.circle(x_range, [(abs(a_i - b_i)/c_i) for a_i, b_i,c_i in zip(random_values, actual_values,range_values)],size=20,color=get_color(),legend="Random Values")
+p.circle(x_range, [(abs(a_i - b_i)/c_i) for a_i, b_i,c_i in zip(interpolate_values, actual_values,range_values)],size=20,color=get_color(),legend="Interpolate Values")
+p.circle(x_range, [(abs(a_i - b_i)/c_i) for a_i, b_i,c_i in zip(poly_values, actual_values,range_values)],size=20,color=get_color(),legend="Poly Values")
+p.legend.click_policy="hide"
+tab1=Panel(child=p,title="Interpolated Values")
+
+p2 = figure(plot_width=1000, plot_height=800,tools=[hover,'pan','wheel_zoom','box_zoom','box_select'],title="Normalized Difference in values (considering only CHannel & Region as input)",x_axis_label="Different Columns "+str(missing_features),y_axis_label="Number axis")
+
+p2.circle(x_range, [(abs(a_i - b_i)/c_i) for a_i, b_i,c_i in zip(knn_values_2, actual_values,range_values)],size=20,color=get_color(),legend="KNN Values")
+p2.circle(x_range, [(abs(a_i - b_i)/c_i) for a_i, b_i,c_i in zip(svm_values_2, actual_values,range_values)],size=20,color=get_color(),legend="SVM Values")
+p2.circle(x_range, [(abs(a_i - b_i)/c_i) for a_i, b_i,c_i in zip(linr_values_2, actual_values,range_values)],size=20,color=get_color(),legend="Linear Values")
+p2.circle(x_range, [(abs(a_i - b_i)/c_i) for a_i, b_i,c_i in zip(logr_values_2, actual_values,range_values)],size=20,color=get_color(),legend="Logistic Values")
+p2.circle(x_range, [(abs(a_i - b_i)/c_i) for a_i, b_i,c_i in zip(svr_values_2, actual_values,range_values)],size=20,color=get_color(),legend="SVR Values")
+p2.circle(x_range, [(abs(a_i - b_i)/c_i) for a_i, b_i,c_i in zip(gbr_values_2, actual_values,range_values)],size=20,color=get_color(),legend="Grad Boost Values")
+
+p2.legend.click_policy="hide"
+tab2=Panel(child=p2,title="Channel & Region as inputs")
+
+p3 = figure(plot_width=1000, plot_height=800,tools=[hover,'pan','wheel_zoom','box_zoom','box_select'],title="Normalized Difference in values ",x_axis_label="Different Columns "+str(missing_features),y_axis_label="Number axis")
+
+p3.circle(x_range, [(abs(a_i - b_i)/c_i) for a_i, b_i,c_i in zip(knn_values, actual_values,range_values)],size=20,color=get_color(),legend="KNN Values")
+p3.circle(x_range, [(abs(a_i - b_i)/c_i) for a_i, b_i,c_i in zip(svm_values, actual_values,range_values)],size=20,color=get_color(),legend="SVM Values")
+p3.circle(x_range, [(abs(a_i - b_i)/c_i) for a_i, b_i,c_i in zip(linr_values, actual_values,range_values)],size=20,color=get_color(),legend="Linear Values")
+p3.circle(x_range, [(abs(a_i - b_i)/c_i) for a_i, b_i,c_i in zip(logr_values, actual_values,range_values)],size=20,color=get_color(),legend="Logistic Values")
+p3.circle(x_range, [(abs(a_i - b_i)/c_i) for a_i, b_i,c_i in zip(svr_values, actual_values,range_values)],size=20,color=get_color(),legend="SVR Values")
+p3.circle(x_range, [(abs(a_i - b_i)/c_i) for a_i, b_i,c_i in zip(gbr_values, actual_values,range_values)],size=20,color=get_color(),legend="GBR Values")
+
+p3.legend.click_policy="hide"
+tab3=Panel(child=p3,title="All except missing as inputs")
 
 tabs=Tabs(tabs=[tab1,tab2,tab3])
 #tabs=Tabs(tabs=[tab1,tab3])
